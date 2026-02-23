@@ -92,6 +92,10 @@ const useChatStore = create((set, get) => ({
     const socket = getSocket();
     if (!socket) return;
 
+    // Remove existing listeners first to prevent duplicates
+    socket.off('newMessage');
+    socket.off('newRoomMessage');
+
     socket.on('newMessage', (message) => {
       set((state) => ({ messages: [...state.messages, message] }));
     });
@@ -100,7 +104,6 @@ const useChatStore = create((set, get) => ({
       set((state) => ({ messages: [...state.messages, message] }));
     });
   },
-
   // Set selected user
   setSelectedUser: (user) => set({ 
     selectedUser: user, 
