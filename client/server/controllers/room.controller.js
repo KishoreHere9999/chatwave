@@ -49,6 +49,28 @@ export const getRoomMessages = async (req, res) => {
   }
 };
 
+// Send room message
+export const sendRoomMessage = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const { text, image } = req.body;
+
+    const message = await Message.create({
+      senderId: req.user._id,
+      roomId,
+      text,
+      image,
+    });
+
+    const populatedMessage = await Message.findById(message._id)
+      .populate('senderId', '-password');
+
+    res.status(201).json(populatedMessage);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Add member to room
 export const addMember = async (req, res) => {
   try {
@@ -60,12 +82,10 @@ export const addMember = async (req, res) => {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    // Only admin can add members
     if (room.adminId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Only admin can add members' });
     }
 
-    // Check if already a member
     if (room.members.includes(userId)) {
       return res.status(400).json({ message: 'User already in room' });
     }
@@ -89,7 +109,6 @@ export const removeMember = async (req, res) => {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    // Only admin can remove members
     if (room.adminId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Only admin can remove members' });
     }
@@ -100,27 +119,6 @@ export const removeMember = async (req, res) => {
     await room.save();
 
     res.status(200).json(room);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-// Send room message
-export const sendRoomMessage = async (req, res) => {
-  try {
-    const { roomId } = req.params;
-    const { text, image } = req.body;
-
-    const message = await Message.create({
-      senderId: req.user._id,
-      roomId,
-      text,
-      image,
-    });
-
-    const populatedMessage = await Message.findById(message._id)
-      .populate('senderId', '-password');
-
-    res.status(201).json(populatedMessage);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -3,9 +3,9 @@ import {
   getRooms,
   createRoom,
   getRoomMessages,
-  sendRoomMessage,
   addMember,
   removeMember,
+  sendRoomMessage,
 } from '../controllers/room.controller.js';
 import protectRoute from '../middleware/auth.middleware.js';
 
