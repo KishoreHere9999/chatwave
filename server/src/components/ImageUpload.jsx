@@ -9,16 +9,19 @@ const ImageUpload = ({ onImageSelect }) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Image must be less than 5MB');
       return;
     }
 
+    // Check file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file');
       return;
     }
 
+    // Convert to base64
     const reader = new FileReader();
     reader.onloadend = () => {
       onImageSelect(reader.result);

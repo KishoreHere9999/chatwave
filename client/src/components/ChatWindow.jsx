@@ -5,11 +5,13 @@ import { getSocket } from '../lib/socket.js';
 import MessageBubble from './MessageBubble.jsx';
 import TypingIndicator from './TypingIndicator.jsx';
 import UserAvatar from './UserAvatar.jsx';
+import ImageUpload from './ImageUpload.jsx';
 import { Send } from 'lucide-react';
 
 const ChatWindow = () => {
   const [text, setText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
@@ -30,10 +32,8 @@ const ChatWindow = () => {
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
-
     socket.off('typing_start');
     socket.off('typing_stop');
-
     socket.on('typing_start', () => {
       console.log('typing started!');
       setIsTyping(true);
@@ -42,7 +42,6 @@ const ChatWindow = () => {
       console.log('typing stopped!');
       setIsTyping(false);
     });
-
     return () => {
       socket.off('typing_start');
       socket.off('typing_stop');
@@ -61,9 +60,10 @@ const ChatWindow = () => {
   };
 
   const handleSend = async () => {
-    if (!text.trim()) return;
-    await sendMessage(selectedUser._id, { text });
+    if (!text.trim() && !selectedImage) return;
+    await sendMessage(selectedUser._id, { text, image: selectedImage });
     setText('');
+    setSelectedImage(null);
     const socket = getSocket();
     if (socket) {
       socket.emit('stop_typing', { receiverId: selectedUser._id });
@@ -107,7 +107,7 @@ const ChatWindow = () => {
       </div>
 
       {/* Messages */}
-    <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+      <div className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-gray-500 text-sm">No messages yet. Say hi! 👋</p>
@@ -117,16 +117,35 @@ const ChatWindow = () => {
             <MessageBubble key={message._id} message={message} />
           ))
         )}
-       
         <div ref={messagesEndRef} />
       </div>
-          {isTyping && <TypingIndicator />}
 
-      {/* Input */}
-      <div className="p-4 border-t border-gray-800 bg-gray-900"></div>
+      {/* Typing Indicator */}
+      {isTyping && <TypingIndicator />}
+
+      {/* Image Preview */}
+      {selectedImage && (
+        <div className="px-4 pb-2 bg-gray-900">
+          <div className="relative inline-block">
+            <img
+              src={selectedImage}
+              alt="preview"
+              className="h-24 rounded-xl object-cover"
+            />
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="p-4 border-t border-gray-800 bg-gray-900">
         <div className="flex items-center gap-3">
+          <ImageUpload onImageSelect={setSelectedImage} />
           <input
             type="text"
             value={text}
@@ -137,7 +156,7 @@ const ChatWindow = () => {
           />
           <button
             onClick={handleSend}
-            disabled={!text.trim()}
+            disabled={!text.trim() && !selectedImage}
             className="bg-teal-400 hover:bg-teal-500 disabled:opacity-50 disabled:cursor-not-allowed text-gray-950 p-3 rounded-xl transition"
           >
             <Send size={18} />
