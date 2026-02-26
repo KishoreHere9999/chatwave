@@ -7,13 +7,27 @@ import Register from './pages/Register.jsx';
 import Home from './pages/Home.jsx';
 
 const App = () => {
-  const { authUser, token, getMe } = useAuthStore();
+  const { authUser, token, getMe, isLoading } = useAuthStore();
 
   useEffect(() => {
     if (token) {
       getMe();
     }
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-5xl mb-4">🌊</div>
+          <p className="text-teal-400 font-bold text-xl animate-pulse">
+            ChatWave
+          </p>
+          <p className="text-gray-500 text-sm mt-2">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <BrowserRouter>
